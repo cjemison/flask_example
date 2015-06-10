@@ -14,7 +14,6 @@ app.config['MONGO_PASSWORD'] = 'cjemison'
 mongo = PyMongo(app)
 api = Api(app)
 
-
 class HelloWorld(Resource):
     def get(self):
         return {'hello': 'world'}
@@ -23,7 +22,6 @@ class HelloWorld(Resource):
 def hello_world():
     rv = cache.get('my-item')
     if rv is None:
-        print "Here"
         online_users = mongo.db.myusers.find_one()
         rv = online_users['name']
         cache.set('my-item', rv, timeout=5 * 60)
