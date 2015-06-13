@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from flask import Flask, Response
 from flask.ext.pymongo import PyMongo
@@ -21,24 +22,39 @@ class addHeader(object):
         self.arg1 = d
 
     def __call__(self, original_func):
-
         def wrappee(*args, **kwargs):
             d = original_func(*args, **kwargs)
+            data = json.dumps(d, indent=4)
             r = Response(json.dumps(d), content_type='application/json; charset=utf-8')
             for key, value in self.arg1.iteritems():
                 r.headers.add(key, value)
+            r.headers.add("Access-Control-Allow-Origin", "*")
+            r.headers.add("Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS")
+            r.headers.add("Access-Control-Allow-Headers", "Last-Modified, Authorization, Lang")
             return r
 
         return wrappee
 
 
 class HelloWorld(Resource):
-    @addHeader({"x-example": "value", "Last-Modified": "ex", })
+    @addHeader({"Last-Modified": datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT'),
+                "Content-Language": "en",
+                "Cache-Control": "no-store, must-revalidate, no-cache, max-age=0"})
     def get(self):
-        d = dict()
-        d['links'] = dict()
-        d['links']['linkedin'] = 'https://www.linkedin.com/in/corneliusjemison'
-        return d
+        links = cache.get("links")
+        if links is None:
+            links = mongo.db.links.find_one()
+            if links is None:
+                d = dict()
+                d['links'] = list()
+                d['links'].append(
+                    {"url": 'https://www.linkedin.com/in/corneliusjemison', 'type': 'link', 'name': 'linkedin'})
+                mongo.db.links.insert(d)
+            id = str(links['_id'])
+            del links['_id']
+            links['id'] = id
+            cache.set('links', links, timeout=5 * 60)
+        return links
 
 # @app.route('/')
 # def hello_world():
