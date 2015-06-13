@@ -1,10 +1,9 @@
-from flask import Flask, Request, Response
+import json
+
+from flask import Flask, Response
 from flask.ext.pymongo import PyMongo
-from flask import render_template
 from werkzeug.contrib.cache import MemcachedCache
 from flask_restful import Resource, Api
-from datetime import datetime
-import json
 
 cache = MemcachedCache(['127.0.0.1:11211'])
 
@@ -22,7 +21,6 @@ class addHeader(object):
         self.arg1 = d
 
     def __call__(self, original_func):
-        decorator_self = self
 
         def wrappee(*args, **kwargs):
             d = original_func(*args, **kwargs)
